@@ -196,6 +196,12 @@ if st.button("🎬 動画を生成", type="primary", use_container_width=True):
 
             # 動画生成
             st.write(f"🎞️ 動画を生成中... （約{estimated_min}分かかります）")
+            video_progress = st.progress(0, text="動画生成中... 0%")
+
+            def on_video_progress(ratio: float, msg: str):
+                pct = int(ratio * 100)
+                video_progress.progress(ratio, text=f"{msg} ({pct}%)")
+
             output_tmp = tempfile.NamedTemporaryFile(suffix=".mp4", delete=False)
             output_tmp.close()
             tmpfiles.append(output_tmp.name)
@@ -206,7 +212,9 @@ if st.button("🎬 動画を生成", type="primary", use_container_width=True):
                 chara2_path=chara2_path,
                 output_path=output_tmp.name,
                 bg_path=bg_path,
+                progress_callback=on_video_progress,
             )
+            video_progress.progress(1.0, text="動画生成完了！ (100%)")
 
             status.update(label="✅ 生成完了！", state="complete")
 

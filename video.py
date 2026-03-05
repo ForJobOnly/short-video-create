@@ -256,6 +256,7 @@ def build_video(
     output_path: str,
     bg_path: str | None = None,
     fps: int = 30,
+    progress_callback=None,
 ) -> None:
     """
     動画を合成してMP4ファイルに出力する。
@@ -276,14 +277,19 @@ def build_video(
     clips = []
     audio_tmpfiles = []
 
+    total_lines = len(lines)
+
     try:
-        for line in lines:
+        for line_idx, line in enumerate(lines):
             chara = line["chara"]
             text = line["text"]
             duration = line["duration"]
             audio_bytes = line["audio"]
 
             is_chara1_active = (chara == "chara1")
+
+            if progress_callback:
+                progress_callback(line_idx / total_lines, f"動画生成中... {line_idx}/{total_lines} セリフ")
 
             # 字幕チャンクに分割
             chunks = _split_subtitle_chunks(text)
