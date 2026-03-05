@@ -9,10 +9,10 @@ from google.oauth2 import service_account
 
 def _get_client():
     """認証済みTTSクライアントを返す。Streamlit Secrets or 環境変数に対応。"""
-    # Streamlit Cloud: st.secrets["gcp_credentials"] に JSONを格納している場合
+    # Streamlit Cloud: st.secrets["gcp_credentials_json"] にJSON文字列を格納している場合
     try:
         import streamlit as st
-        creds_dict = dict(st.secrets["gcp_credentials"])
+        creds_dict = json.loads(st.secrets["gcp_credentials_json"])
         credentials = service_account.Credentials.from_service_account_info(
             creds_dict,
             scopes=["https://www.googleapis.com/auth/cloud-platform"],
