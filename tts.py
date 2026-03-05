@@ -12,16 +12,28 @@ def _get_client():
     # Streamlit Cloud: st.secrets["gcp_credentials_json"] にJSON文字列を格納している場合
     try:
         import streamlit as st
-        creds_dict = json.loads(st.secrets["gcp_credentials_json"])
+        if "gcp_credentials_json" in st.secrets:
+            creds_dict = json.loads(st.secrets["gcp_credentials_json"])
+            credentials = service_account.Credentials.from_service_account_info(
+                creds_dict,
+                scopes=["https://www.googleapis.com/auth/cloud-platform"],
+            )
+            return texttospeech.TextToSpeechClient(transport="rest", credentials=credentials)
+    except ImportError:
+        pass  # Streamlit未インストール（CLI実行時）
+
+    # ローカル: GOOGLE_APPLICATION_CREDENTIALS 環境変数
+    creds_path = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
+    if creds_path and os.path.exists(creds_path):
+        with open(creds_path) as f:
+            creds_dict = json.load(f)
         credentials = service_account.Credentials.from_service_account_info(
             creds_dict,
             scopes=["https://www.googleapis.com/auth/cloud-platform"],
         )
         return texttospeech.TextToSpeechClient(transport="rest", credentials=credentials)
-    except Exception:
-        pass
-    # ローカル: GOOGLE_APPLICATION_CREDENTIALS 環境変数
-    return texttospeech.TextToSpeechClient(transport="rest")
+
+    raise RuntimeError("GCP認証情報が見つかりません。GOOGLE_APPLICATION_CREDENTIALSまたはStreamlit Secretsを設定してください。")
 
 # デフォルト声設定
 VOICE_CONFIGS = {
@@ -101,6 +113,7 @@ def synthesize(text: str, chara: str, reading_list: dict[str, str] | None = None
 def synthesize_lines(lines: list[dict], voice_configs: dict | None = None, reading_list: dict[str, str] | None = None) -> list[dict]:
     """
     原稿行リストを受け取り、各行に音声バイト列と再生時間を付与して返す。
+    並列リクエストで高速化。
 
     Args:
         lines: [{"chara": "chara1" | "chara2", "text": str}, ...]
@@ -110,25 +123,25 @@ def synthesize_lines(lines: list[dict], voice_configs: dict | None = None, readi
         [{"chara": str, "text": str, "audio": bytes, "duration": float}, ...]
     """
     import wave
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
     configs = VOICE_CONFIGS.copy()
     if voice_configs:
         configs.update(voice_configs)
 
-    result = []
-    for line in lines:
+    def _process(i, line):
         chara = line["chara"]
         text = line["text"]
         audio_bytes = synthesize(text, chara, reading_list, configs.get(chara))
-
-        # WAVから再生時間を算出
         with wave.open(io.BytesIO(audio_bytes)) as wf:
             duration = wf.getnframes() / wf.getframerate()
+        return i, {"chara": chara, "text": text, "audio": audio_bytes, "duration": duration}
 
-        result.append({
-            "chara": chara,
-            "text": text,
-            "audio": audio_bytes,
-            "duration": duration,
-        })
-    return result
+    results = [None] * len(lines)
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        futures = {executor.submit(_process, i, line): i for i, line in enumerate(lines)}
+        for future in as_completed(futures):
+            i, item = future.result()
+            results[i] = item
+
+    return results
