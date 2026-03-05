@@ -9,14 +9,12 @@ from google.oauth2 import service_account
 
 def _get_client():
     """認証済みTTSクライアントを返す。Streamlit Secrets or 環境変数に対応。"""
-    # Streamlit Cloud: st.secrets["gcp_credentials_json"] にJSON文字列を格納している場合
+    # Streamlit Cloud: st.secrets["gcp"] にTOML形式で格納している場合
     try:
         import streamlit as st
-        if "gcp_credentials_b64" in st.secrets:
-            import base64
-            creds_dict = json.loads(base64.b64decode(st.secrets["gcp_credentials_b64"]))
+        if "gcp" in st.secrets:
             credentials = service_account.Credentials.from_service_account_info(
-                creds_dict,
+                dict(st.secrets["gcp"]),
                 scopes=["https://www.googleapis.com/auth/cloud-platform"],
             )
             return texttospeech.TextToSpeechClient(transport="rest", credentials=credentials)
@@ -34,7 +32,7 @@ def _get_client():
         )
         return texttospeech.TextToSpeechClient(transport="rest", credentials=credentials)
 
-    raise RuntimeError("GCP認証情報が見つかりません。GOOGLE_APPLICATION_CREDENTIALSまたはStreamlit Secretsを設定してください。")
+    raise RuntimeError("GCP認証情報が見つかりません。")
 
 # デフォルト声設定
 VOICE_CONFIGS = {
