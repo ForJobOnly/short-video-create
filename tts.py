@@ -12,8 +12,9 @@ def _get_client():
     # Streamlit Cloud: st.secrets["gcp_credentials_json"] にJSON文字列を格納している場合
     try:
         import streamlit as st
-        if "gcp_credentials_json" in st.secrets:
-            creds_dict = json.loads(st.secrets["gcp_credentials_json"])
+        if "gcp_credentials_b64" in st.secrets:
+            import base64
+            creds_dict = json.loads(base64.b64decode(st.secrets["gcp_credentials_b64"]))
             credentials = service_account.Credentials.from_service_account_info(
                 creds_dict,
                 scopes=["https://www.googleapis.com/auth/cloud-platform"],
