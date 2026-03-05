@@ -1,0 +1,10 @@
+credentials.json
+__pycache__/
+*.pyc
+output*.mp4
+output.mp4
+.env
+.DS_Store
+input/*.png
+input/*.jpg
+input/*.jpeg

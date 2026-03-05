@@ -1,0 +1,5 @@
+moviepy
+Pillow
+numpy
+google-cloud-texttospeech
+streamlit
