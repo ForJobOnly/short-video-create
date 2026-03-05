@@ -18,10 +18,6 @@ from video import build_video
 st.set_page_config(page_title="ショート動画生成", page_icon="🎬", layout="centered")
 st.title("🎬 ショート動画自動生成")
 
-# デバッグ: Secrets確認（確認後削除）
-with st.expander("🔧 Debug: Secrets確認"):
-    st.write("利用可能なSecretキー:", list(st.secrets.keys()) if st.secrets else "なし")
-
 VOICE_OPTIONS = {
     "✨ Chirp3-HD（最高品質）女性": [
         "ja-JP-Chirp3-HD-Achernar", "ja-JP-Chirp3-HD-Aoede", "ja-JP-Chirp3-HD-Autonoe",
