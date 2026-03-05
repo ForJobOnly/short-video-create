@@ -69,11 +69,15 @@ def _load_chara_image(path: str, height: int, flip: bool = False) -> Image.Image
 def _get_font(size: int):
     """フォントを取得。システムフォントがなければPillowのデフォルトを使用。"""
     font_candidates = [
+        # macOS
         "/System/Library/Fonts/ヒラギノ角ゴシック W6.ttc",
         "/System/Library/Fonts/Hiragino Sans GB.ttc",
         "/Library/Fonts/Arial Unicode MS.ttf",
-        "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+        # Linux (Noto CJK - packages.txt でインストール)
+        "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc",
+        "/usr/share/fonts/opentype/noto/NotoSansCJKjp-Bold.otf",
         "/usr/share/fonts/truetype/noto/NotoSansCJK-Bold.ttc",
+        "/usr/share/fonts/noto-cjk/NotoSansCJK-Bold.ttc",
     ]
     for candidate in font_candidates:
         if os.path.exists(candidate):
