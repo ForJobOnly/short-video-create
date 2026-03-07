@@ -310,7 +310,7 @@ def build_video(
                                _c2=chara2_img, _is_c1=is_c1_active):
                     frame = _sub.copy()
                     bob = int(BOB_AMPLITUDE * math.sin(2 * math.pi * BOB_FREQUENCY * t))
-                    c1_y = bob if _is_c1 else 0
+                    c1_y = 0
                     c2_y = 0 if _is_c1 else bob
                     # キャラ1発話中: 口パク（通常↔発話画像を高速切り替え） + 回転アニメーション
                     if _is_c1:
