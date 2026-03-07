@@ -318,8 +318,7 @@ def build_video(
                         c1_img = _c1t if talking else _c1
                     else:
                         c1_img = _c1
-                    c1_rot = CHARA1_ROT_AMPLITUDE * math.sin(2 * math.pi * CHARA1_ROT_FREQUENCY * t) if _is_c1 else 0.0
-                    frame = _paste_chara(frame, c1_img, CHARA1_X_CENTER, _is_c1, c1_y, c1_rot)
+                    frame = _paste_chara(frame, c1_img, CHARA1_X_CENTER, _is_c1, c1_y)
                     frame = _paste_chara(frame, _c2, CHARA2_X_CENTER, not _is_c1, c2_y)
                     return frame
                 return VideoClip(make_frame, duration=dur)
