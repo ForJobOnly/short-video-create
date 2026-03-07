@@ -58,7 +58,8 @@ script_input = st.text_area(
 st.header("② キャラクター画像")
 col1, col2 = st.columns(2)
 with col1:
-    chara1_file = st.file_uploader("キャラ1（先生）", type=["png", "jpg", "jpeg"])
+    chara1_file = st.file_uploader("キャラ1（先生）通常", type=["png", "jpg", "jpeg"])
+    chara1_talking_file = st.file_uploader("キャラ1（先生）発話用（任意）", type=["png", "jpg", "jpeg"])
 with col2:
     chara2_file = st.file_uploader("キャラ2（生徒）", type=["png", "jpg", "jpeg"])
 
@@ -144,6 +145,7 @@ if st.button("🎬 動画を生成", type="primary", use_container_width=True):
                 return tmp.name
 
             chara1_path = save_upload(chara1_file, ".png")
+            chara1_talking_path = save_upload(chara1_talking_file, ".png") if chara1_talking_file else None
             chara2_path = save_upload(chara2_file, ".png")
             bg_path = save_upload(bg_file, ".png") if bg_file else None
 
@@ -209,6 +211,7 @@ if st.button("🎬 動画を生成", type="primary", use_container_width=True):
             build_video(
                 lines=synthesized,
                 chara1_path=chara1_path,
+                chara1_talking_path=chara1_talking_path,
                 chara2_path=chara2_path,
                 output_path=output_tmp.name,
                 bg_path=bg_path,

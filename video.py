@@ -260,6 +260,7 @@ def build_video(
     chara1_path: str,
     chara2_path: str,
     output_path: str,
+    chara1_talking_path: str | None = None,
     bg_path: str | None = None,
     fps: int = 30,
     progress_callback=None,
@@ -278,6 +279,7 @@ def build_video(
     """
     set_background(bg_path)
     chara1_img = _load_chara_image(chara1_path, CHARA_BASE_HEIGHT, flip=False)
+    chara1_talking_img = _load_chara_image(chara1_talking_path, CHARA_BASE_HEIGHT, flip=False) if chara1_talking_path else chara1_img
     chara2_img = _load_chara_image(chara2_path, CHARA_BASE_HEIGHT, flip=True)
 
     clips = []
@@ -302,14 +304,17 @@ def build_video(
 
             def _make_animated_clip(subtitle_bg: np.ndarray, dur: float, is_c1_active: bool) -> VideoClip:
                 """ボブアニメーション付きVideoClipを生成する。"""
-                def make_frame(t, _sub=subtitle_bg, _c1=chara1_img, _c2=chara2_img, _is_c1=is_c1_active):
+                def make_frame(t, _sub=subtitle_bg,
+                               _c1=chara1_img, _c1t=chara1_talking_img,
+                               _c2=chara2_img, _is_c1=is_c1_active):
                     frame = _sub.copy()
                     bob = int(BOB_AMPLITUDE * math.sin(2 * math.pi * BOB_FREQUENCY * t))
                     c1_y = bob if _is_c1 else 0
                     c2_y = 0 if _is_c1 else bob
-                    # キャラ1発話中: 回転アニメーション（手・体の動き）
+                    # キャラ1発話中: talking画像 + 回転アニメーション
+                    c1_img = _c1t if _is_c1 else _c1
                     c1_rot = CHARA1_ROT_AMPLITUDE * math.sin(2 * math.pi * CHARA1_ROT_FREQUENCY * t) if _is_c1 else 0.0
-                    frame = _paste_chara(frame, _c1, CHARA1_X_CENTER, _is_c1, c1_y, c1_rot)
+                    frame = _paste_chara(frame, c1_img, CHARA1_X_CENTER, _is_c1, c1_y, c1_rot)
                     frame = _paste_chara(frame, _c2, CHARA2_X_CENTER, not _is_c1, c2_y)
                     return frame
                 return VideoClip(make_frame, duration=dur)
