@@ -42,6 +42,10 @@ BG_BOTTOM_COLOR = (80, 20, 120)
 BOB_AMPLITUDE = 12   # 上下の振れ幅 (px)
 BOB_FREQUENCY = 3.5  # 1秒あたりのボブ回数 (Hz)
 
+# キャラ1専用アニメーション（手・体の動き）
+CHARA1_ROT_AMPLITUDE = 6.0   # 回転の振れ幅 (degrees)
+CHARA1_ROT_FREQUENCY = 2.5   # 回転の速さ (Hz)
+
 
 def _make_gradient_bg() -> np.ndarray:
     """縦型グラデーション背景画像をndarrayで生成。"""
@@ -184,13 +188,15 @@ def _render_subtitle(text: str, active_chara: str) -> np.ndarray:
     return np.array(composite.convert("RGB"))
 
 
-def _paste_chara(frame: np.ndarray, chara_img: Image.Image, x_center: int, is_active: bool, y_offset: int = 0) -> np.ndarray:
+def _paste_chara(frame: np.ndarray, chara_img: Image.Image, x_center: int, is_active: bool, y_offset: int = 0, rotation: float = 0.0) -> np.ndarray:
     """フレームにキャラ画像を合成する。"""
     scale = CHARA_ACTIVE_SCALE if is_active else CHARA_INACTIVE_SCALE
     target_h = int(CHARA_BASE_HEIGHT * scale)
     ratio = target_h / chara_img.height
     target_w = int(chara_img.width * ratio)
     resized = chara_img.resize((target_w, target_h), Image.LANCZOS)
+    if rotation != 0.0:
+        resized = resized.rotate(rotation, resample=Image.BICUBIC, expand=False)
 
     x = x_center - target_w // 2
     y = CHARA_Y_BOTTOM - target_h + y_offset
@@ -301,7 +307,9 @@ def build_video(
                     bob = int(BOB_AMPLITUDE * math.sin(2 * math.pi * BOB_FREQUENCY * t))
                     c1_y = bob if _is_c1 else 0
                     c2_y = 0 if _is_c1 else bob
-                    frame = _paste_chara(frame, _c1, CHARA1_X_CENTER, _is_c1, c1_y)
+                    # キャラ1発話中: 回転アニメーション（手・体の動き）
+                    c1_rot = CHARA1_ROT_AMPLITUDE * math.sin(2 * math.pi * CHARA1_ROT_FREQUENCY * t) if _is_c1 else 0.0
+                    frame = _paste_chara(frame, _c1, CHARA1_X_CENTER, _is_c1, c1_y, c1_rot)
                     frame = _paste_chara(frame, _c2, CHARA2_X_CENTER, not _is_c1, c2_y)
                     return frame
                 return VideoClip(make_frame, duration=dur)
