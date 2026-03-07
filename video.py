@@ -45,6 +45,7 @@ BOB_FREQUENCY = 3.5  # 1秒あたりのボブ回数 (Hz)
 # キャラ1専用アニメーション（手・体の動き）
 CHARA1_ROT_AMPLITUDE = 6.0   # 回転の振れ幅 (degrees)
 CHARA1_ROT_FREQUENCY = 2.5   # 回転の速さ (Hz)
+CHARA1_TALKING_FREQUENCY = 4.0  # 口パク切り替え速度 (Hz)
 
 
 def _make_gradient_bg() -> np.ndarray:
@@ -311,8 +312,12 @@ def build_video(
                     bob = int(BOB_AMPLITUDE * math.sin(2 * math.pi * BOB_FREQUENCY * t))
                     c1_y = bob if _is_c1 else 0
                     c2_y = 0 if _is_c1 else bob
-                    # キャラ1発話中: talking画像 + 回転アニメーション
-                    c1_img = _c1t if _is_c1 else _c1
+                    # キャラ1発話中: 口パク（通常↔発話画像を高速切り替え） + 回転アニメーション
+                    if _is_c1:
+                        talking = math.sin(2 * math.pi * CHARA1_TALKING_FREQUENCY * t) > 0
+                        c1_img = _c1t if talking else _c1
+                    else:
+                        c1_img = _c1
                     c1_rot = CHARA1_ROT_AMPLITUDE * math.sin(2 * math.pi * CHARA1_ROT_FREQUENCY * t) if _is_c1 else 0.0
                     frame = _paste_chara(frame, c1_img, CHARA1_X_CENTER, _is_c1, c1_y, c1_rot)
                     frame = _paste_chara(frame, _c2, CHARA2_X_CENTER, not _is_c1, c2_y)
